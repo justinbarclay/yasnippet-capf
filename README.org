@@ -1,0 +1,2 @@
+* yasnippet-capf
+A playground for writing a CAPF for yasnippet
