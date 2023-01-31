@@ -51,14 +51,26 @@
 
 (defun yas-annotate-completion (&optional candidate)
   "Annotates current `candidate' with the snippets table name"
-  (get-text-property 0 'yas-mode candidate))
+  (format "%s[yas]" (get-text-property 0 'yas-mode candidate)))
+
+(defun yas-affixate-completion (candidates)
+  "Annotates current `candidate' with the snippets table name"
+  (mapcar (lambda (candidate)
+            (list candidate
+                  (kind-icon-formatted 'snippet)
+                  (yas-annotate-completion candidate)))
+          candidates))
+
+(defun yas-exit-function (candidate status)
+  (when (eq status 'finished)
+    (yas-expand)))
 
 (defun yas-help-buffer (&optional cand)
   "Displays the snippet's extended name and expanded body in a help buffer "
   (with-current-buffer (get-buffer-create "*yas-documentation*")
     (erase-buffer)
     (prog-mode)
-    (funcall (intern-soft (get-text-property 0 'yas-table-name cand)))
+    (funcall (intern-soft (get-text-property 0 'yas-mode cand)))
     (yas-minor-mode 1)
     (save-excursion
       (insert "Title: " (get-text-property 0 'yas-name cand) "\n")
@@ -75,7 +87,9 @@
                 (yas-annotate-candidates (yas--get-snippet-tables)))
             :exclusive 'no
             :annotation-function 'yas-annotate-completion
+            :affixation-function 'yas-affixate-completion
             :company-doc-buffer 'yas-help-buffer
+            :exit-function 'yas-exit-function
             :category 'yasnippets))))
 
 (define-minor-mode yas-capf-minor-mode
@@ -83,6 +97,5 @@
   :init-value nil
   :lighter "yas-capf"
   (add-to-list 'completion-at-point-functions #'yas-complete-snippet-at-point))
-
 
 ;;; yasnippet-capf.el ends here
